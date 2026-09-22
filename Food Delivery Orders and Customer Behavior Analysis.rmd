@@ -1,0 +1,928 @@
+---
+title: "Food Delivery Orders and Customer Behavior Analysis"
+author: "mayank saini"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: readable
+---
+
+# 1. Introduction
+
+Food delivery services have become an important part of the modern food and
+restaurant industry. Customers can order food from different restaurants
+through online delivery platforms, making it possible to analyze ordering
+patterns, food costs, delivery performance and customer satisfaction.
+
+This project analyzes food delivery order data using R. The analysis focuses
+on order costs, delivery charges, preparation time, delivery time, customer
+ratings, cuisines, restaurants and order status.
+
+Statistical analysis and data visualization techniques are used to identify
+patterns and relationships in the food delivery data.
+
+# 2. Objectives
+
+The main objectives of this project are:
+
+- To import and understand the food delivery dataset.
+- To examine the structure and characteristics of the data.
+- To identify missing and duplicate values.
+- To clean and preprocess the dataset.
+- To analyze food and delivery costs.
+- To analyze preparation and delivery times.
+- To compare different cuisine types.
+- To analyze restaurant performance.
+- To study customer ratings.
+- To analyze order status.
+- To examine relationships between numerical variables.
+- To create meaningful graphs and visualizations.
+- To identify important findings and provide recommendations.
+
+# 3. Data Importing
+
+## Explanation of the R Code
+
+The `read.csv()` function is used to import the food delivery CSV file into R.
+The imported dataset is stored in an object called `food_data`.
+
+```{r data-import, message=FALSE, warning=FALSE}
+
+# Load required package
+library(ggplot2)
+
+# Import the CSV dataset
+food_data <- read.csv("food_delivery_orders.csv")
+
+# Display the first six records
+head(food_data)
+
+```
+
+## Interpretation
+
+The dataset has been successfully imported into R. The first six records are
+displayed to understand the type of information available in the dataset.
+
+# 4. Understanding the Dataset
+
+## 4.1 Number of Records
+
+```{r number-records}
+
+cat("Number of records:", nrow(food_data))
+
+```
+
+## 4.2 Number of Variables
+
+```{r number-variables}
+
+cat("Number of variables:", ncol(food_data))
+
+```
+
+## 4.3 Column Names
+
+```{r column-names}
+
+names(food_data)
+
+```
+
+## 4.4 Dataset Structure
+
+```{r dataset-structure}
+
+str(food_data)
+
+```
+
+## 4.5 Summary of Dataset
+
+```{r dataset-summary}
+
+summary(food_data)
+
+```
+
+## Explanation of the R Code
+
+- `nrow()` counts the number of rows in the dataset.
+- `ncol()` counts the number of columns.
+- `names()` displays the variable names.
+- `str()` shows the structure and data type of each variable.
+- `summary()` provides descriptive information about the variables.
+
+## Interpretation
+
+The dataset contains information about food delivery orders, including
+customer details, restaurants, cuisine types, costs, preparation time,
+delivery time, ratings and order status.
+
+# 5. Data Preprocessing and Cleaning
+
+Data cleaning is an important step before statistical analysis. It helps
+ensure that the results are based on valid and consistent observations.
+
+## 5.1 Check Missing Values
+
+```{r missing-values}
+
+missing_values <- colSums(is.na(food_data))
+
+missing_values
+
+```
+
+## Interpretation
+
+The number of missing values is displayed for every variable. Variables with
+missing values can affect statistical calculations and therefore need to be
+considered during preprocessing.
+
+## 5.2 Check Duplicate Records
+
+```{r duplicate-records}
+
+duplicate_count <- sum(duplicated(food_data))
+
+cat("Number of duplicate records:", duplicate_count)
+
+```
+
+## Interpretation
+
+Duplicate records can result in the same order being counted more than once.
+The result above shows whether duplicate observations are present.
+
+## 5.3 Check Data Types
+
+```{r data-types}
+
+sapply(food_data, class)
+
+```
+
+## 5.4 Check Unique Order Statuses
+
+```{r order-status-values}
+
+unique(food_data$Order_Status)
+
+```
+
+## 5.5 Check Unique Cuisine Types
+
+```{r cuisine-values}
+
+unique(food_data$Cuisine_Type)
+
+```
+
+# 6. Creating a Clean Dataset
+
+```{r clean-data}
+
+food_clean <- food_data
+
+# Remove duplicate records
+food_clean <- food_clean[!duplicated(food_clean), ]
+
+# Remove rows with missing important numerical values
+food_clean <- food_clean[
+  !is.na(food_clean$Food_Cost) &
+  !is.na(food_clean$Delivery_Fee) &
+  !is.na(food_clean$Total_Order_Cost) &
+  !is.na(food_clean$Prep_Time_Min) &
+  !is.na(food_clean$Delivery_Time_Min) &
+  !is.na(food_clean$Order_Rating),
+]
+
+# Keep positive cost and time values
+food_clean <- food_clean[
+  food_clean$Food_Cost >= 0 &
+  food_clean$Delivery_Fee >= 0 &
+  food_clean$Total_Order_Cost >= 0 &
+  food_clean$Prep_Time_Min >= 0 &
+  food_clean$Delivery_Time_Min >= 0,
+]
+
+cat("Original number of records:", nrow(food_data), "\n")
+cat("Records after cleaning:", nrow(food_clean), "\n")
+cat("Records removed:", nrow(food_data) - nrow(food_clean))
+
+```
+
+## Explanation
+
+The dataset is copied into `food_clean`. Duplicate observations are removed,
+followed by observations with missing important numerical values.
+
+Negative values for costs and delivery times are also excluded because they
+are not meaningful for this analysis.
+
+## Interpretation
+
+The cleaned dataset contains valid observations that can be used for the
+remaining statistical analysis.
+
+# 7. Basic Statistical Analysis
+
+## 7.1 Food Cost Statistics
+
+```{r food-cost-statistics}
+
+food_cost_stats <- c(
+  Mean = mean(food_clean$Food_Cost),
+  Median = median(food_clean$Food_Cost),
+  Minimum = min(food_clean$Food_Cost),
+  Maximum = max(food_clean$Food_Cost),
+  Standard_Deviation = sd(food_clean$Food_Cost)
+)
+
+food_cost_stats
+
+```
+
+## 7.2 Delivery Fee Statistics
+
+```{r delivery-fee-statistics}
+
+delivery_fee_stats <- c(
+  Mean = mean(food_clean$Delivery_Fee),
+  Median = median(food_clean$Delivery_Fee),
+  Minimum = min(food_clean$Delivery_Fee),
+  Maximum = max(food_clean$Delivery_Fee),
+  Standard_Deviation = sd(food_clean$Delivery_Fee)
+)
+
+delivery_fee_stats
+
+```
+
+## 7.3 Total Order Cost Statistics
+
+```{r order-cost-statistics}
+
+order_cost_stats <- c(
+  Mean = mean(food_clean$Total_Order_Cost),
+  Median = median(food_clean$Total_Order_Cost),
+  Minimum = min(food_clean$Total_Order_Cost),
+  Maximum = max(food_clean$Total_Order_Cost),
+  Standard_Deviation = sd(food_clean$Total_Order_Cost)
+)
+
+order_cost_stats
+
+```
+
+## Explanation
+
+The `mean()` function calculates the average, `median()` calculates the
+middle value, `min()` and `max()` find the minimum and maximum values, and
+`sd()` calculates standard deviation.
+
+## Interpretation
+
+These statistics provide an overview of food costs, delivery charges and
+overall order costs in the dataset.
+
+# 8. Order Status Analysis
+
+```{r order-status-table}
+
+status_count <- table(food_clean$Order_Status)
+
+status_count
+
+```
+
+## Order Status Visualization
+
+```{r order-status-graph, fig.width=8, fig.height=5}
+
+status_data <- as.data.frame(status_count)
+
+names(status_data) <- c("Order_Status", "Number_of_Orders")
+
+ggplot(
+  status_data,
+  aes(x = Order_Status, y = Number_of_Orders)
+) +
+  geom_col() +
+  labs(
+    title = "Distribution of Food Delivery Order Status",
+    x = "Order Status",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The bar chart shows the number of orders belonging to each order status.
+This helps identify the proportion of orders that were successfully delivered
+and those that may have experienced another status.
+
+# 9. Cuisine Type Analysis
+
+```{r cuisine-count}
+
+cuisine_count <- table(food_clean$Cuisine_Type)
+
+cuisine_count
+
+```
+
+## Cuisine Visualization
+
+```{r cuisine-graph, fig.width=9, fig.height=6}
+
+cuisine_data <- as.data.frame(cuisine_count)
+
+names(cuisine_data) <- c("Cuisine_Type", "Number_of_Orders")
+
+ggplot(
+  cuisine_data,
+  aes(
+    x = reorder(Cuisine_Type, Number_of_Orders),
+    y = Number_of_Orders
+  )
+) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Number of Orders by Cuisine Type",
+    x = "Cuisine Type",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The graph compares the popularity of different cuisine types based on the
+number of orders. Cuisine types with larger bars received more orders in
+the dataset.
+
+# 10. Restaurant Analysis
+
+## 10.1 Orders by Restaurant
+
+```{r restaurant-count}
+
+restaurant_count <- table(food_clean$Restaurant_Name)
+
+restaurant_data <- as.data.frame(restaurant_count)
+
+names(restaurant_data) <- c(
+  "Restaurant_Name",
+  "Number_of_Orders"
+)
+
+restaurant_data <- restaurant_data[
+  order(-restaurant_data$Number_of_Orders),
+]
+
+head(restaurant_data, 10)
+
+```
+
+## 10.2 Top Restaurants
+
+```{r restaurant-graph, fig.width=9, fig.height=6}
+
+top_restaurants <- head(restaurant_data, 10)
+
+ggplot(
+  top_restaurants,
+  aes(
+    x = reorder(Restaurant_Name, Number_of_Orders),
+    y = Number_of_Orders
+  )
+) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 Restaurants by Number of Orders",
+    x = "Restaurant",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The graph identifies the restaurants with the highest number of orders.
+This provides an indication of restaurant popularity within the dataset.
+
+# 11. Food Cost Analysis
+
+```{r food-cost-graph, fig.width=9, fig.height=6}
+
+ggplot(
+  food_clean,
+  aes(x = Food_Cost)
+) +
+  geom_histogram(bins = 20) +
+  labs(
+    title = "Distribution of Food Costs",
+    x = "Food Cost",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The histogram shows how food costs are distributed among the orders.
+It helps identify whether most orders are concentrated within a particular
+cost range.
+
+# 12. Total Order Cost Analysis
+
+```{r total-cost-graph, fig.width=9, fig.height=6}
+
+ggplot(
+  food_clean,
+  aes(x = Total_Order_Cost)
+) +
+  geom_histogram(bins = 20) +
+  labs(
+    title = "Distribution of Total Order Cost",
+    x = "Total Order Cost",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The histogram displays the distribution of total spending per order.
+It provides an overview of customer spending patterns.
+
+# 13. Delivery Time Analysis
+
+## 13.1 Delivery Time Statistics
+
+```{r delivery-time-statistics}
+
+delivery_time_stats <- c(
+  Mean = mean(food_clean$Delivery_Time_Min),
+  Median = median(food_clean$Delivery_Time_Min),
+  Minimum = min(food_clean$Delivery_Time_Min),
+  Maximum = max(food_clean$Delivery_Time_Min),
+  Standard_Deviation = sd(food_clean$Delivery_Time_Min)
+)
+
+delivery_time_stats
+
+```
+
+## 13.2 Delivery Time Distribution
+
+```{r delivery-time-graph, fig.width=9, fig.height=6}
+
+ggplot(
+  food_clean,
+  aes(x = Delivery_Time_Min)
+) +
+  geom_histogram(bins = 20) +
+  labs(
+    title = "Distribution of Delivery Time",
+    x = "Delivery Time (Minutes)",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The delivery-time graph shows how long orders generally take to reach
+customers. It can help identify common delivery-time ranges and unusually
+long deliveries.
+
+# 14. Food Preparation Time Analysis
+
+```{r preparation-time-graph, fig.width=9, fig.height=6}
+
+ggplot(
+  food_clean,
+  aes(x = Prep_Time_Min)
+) +
+  geom_histogram(bins = 20) +
+  labs(
+    title = "Distribution of Food Preparation Time",
+    x = "Preparation Time (Minutes)",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The graph shows the distribution of food preparation times. Preparation time
+is an important factor that can contribute to the total time required to
+complete a food delivery order.
+
+# 15. Customer Rating Analysis
+
+## 15.1 Rating Distribution
+
+```{r rating-table}
+
+rating_count <- table(food_clean$Order_Rating)
+
+rating_count
+
+```
+
+```{r rating-graph, fig.width=8, fig.height=5}
+
+rating_data <- as.data.frame(rating_count)
+
+names(rating_data) <- c(
+  "Order_Rating",
+  "Number_of_Orders"
+)
+
+ggplot(
+  rating_data,
+  aes(
+    x = factor(Order_Rating),
+    y = Number_of_Orders
+  )
+) +
+  geom_col() +
+  labs(
+    title = "Distribution of Customer Ratings",
+    x = "Order Rating",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## 15.2 Average Rating
+
+```{r average-rating}
+
+average_rating <- mean(
+  food_clean$Order_Rating,
+  na.rm = TRUE
+)
+
+cat("Average customer rating:", round(average_rating, 2))
+
+```
+
+## Interpretation
+
+The rating distribution shows how customers evaluated their food delivery
+orders. The average rating provides an overall measure of customer
+satisfaction.
+
+# 16. Customer Analysis
+
+## Number of Unique Customers
+
+```{r customer-count}
+
+number_of_customers <- length(
+  unique(food_clean$Customer_ID)
+)
+
+cat("Number of unique customers:", number_of_customers)
+
+```
+
+## Orders per Customer
+
+```{r customer-orders}
+
+customer_orders <- table(food_clean$Customer_ID)
+
+customer_orders <- sort(
+  customer_orders,
+  decreasing = TRUE
+)
+
+head(customer_orders, 10)
+
+```
+
+## Interpretation
+
+The customer analysis identifies the number of unique customers and shows
+which customers placed the greatest number of orders in the dataset.
+
+# 17. Total Order Cost by Cuisine
+
+```{r cuisine-cost}
+
+cuisine_cost <- aggregate(
+  Total_Order_Cost ~ Cuisine_Type,
+  data = food_clean,
+  FUN = mean
+)
+
+names(cuisine_cost)[2] <- "Average_Order_Cost"
+
+cuisine_cost <- cuisine_cost[
+  order(-cuisine_cost$Average_Order_Cost),
+]
+
+cuisine_cost
+
+```
+
+```{r cuisine-cost-graph, fig.width=9, fig.height=6}
+
+ggplot(
+  cuisine_cost,
+  aes(
+    x = reorder(Cuisine_Type, Average_Order_Cost),
+    y = Average_Order_Cost
+  )
+) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Average Order Cost by Cuisine Type",
+    x = "Cuisine Type",
+    y = "Average Order Cost"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The graph compares average spending across different cuisine types.
+This can help identify cuisines associated with higher or lower average
+order values.
+
+# 18. Delivery Time and Customer Rating
+
+```{r delivery-rating-graph, fig.width=9, fig.height=6}
+
+ggplot(
+  food_clean,
+  aes(
+    x = Delivery_Time_Min,
+    y = Order_Rating
+  )
+) +
+  geom_point() +
+  geom_smooth(
+    method = "lm",
+    se = FALSE
+  ) +
+  labs(
+    title = "Relationship Between Delivery Time and Customer Rating",
+    x = "Delivery Time (Minutes)",
+    y = "Customer Rating"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The scatter plot examines whether delivery time is associated with customer
+ratings. The trend line provides a simple visual indication of the direction
+of the relationship.
+
+A relationship in the graph should not automatically be interpreted as
+causation.
+
+# 19. Food Cost and Total Order Cost
+
+```{r cost-relationship, fig.width=9, fig.height=6}
+
+ggplot(
+  food_clean,
+  aes(
+    x = Food_Cost,
+    y = Total_Order_Cost
+  )
+) +
+  geom_point() +
+  geom_smooth(
+    method = "lm",
+    se = FALSE
+  ) +
+  labs(
+    title = "Relationship Between Food Cost and Total Order Cost",
+    x = "Food Cost",
+    y = "Total Order Cost"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The graph examines the relationship between the food cost and the final
+order cost. Since food cost is an important component of the total order
+cost, a positive relationship may be expected.
+
+# 20. Correlation Analysis
+
+Correlation measures the strength and direction of a linear relationship
+between numerical variables.
+
+```{r correlation-analysis}
+
+correlation_data <- food_clean[
+  ,
+  c(
+    "Food_Cost",
+    "Delivery_Fee",
+    "Total_Order_Cost",
+    "Prep_Time_Min",
+    "Delivery_Time_Min",
+    "Order_Rating"
+  )
+]
+
+correlation_matrix <- cor(
+  correlation_data,
+  use = "complete.obs"
+)
+
+round(correlation_matrix, 3)
+
+```
+
+## Explanation
+
+The `cor()` function calculates correlation coefficients.
+
+Correlation values range from -1 to +1:
+
+- A value close to +1 indicates a strong positive relationship.
+- A value close to -1 indicates a strong negative relationship.
+- A value close to 0 indicates a weak linear relationship.
+
+## Interpretation
+
+The correlation matrix helps identify relationships among food cost,
+delivery fee, total order cost, preparation time, delivery time and
+customer ratings.
+
+# 21. Total Delivery Time Analysis
+
+The total delivery time represents the complete time involved in preparation
+and delivery.
+
+```{r total-delivery-time}
+
+total_delivery_stats <- c(
+  Mean = mean(food_clean$Total_Delivery_Time),
+  Median = median(food_clean$Total_Delivery_Time),
+  Minimum = min(food_clean$Total_Delivery_Time),
+  Maximum = max(food_clean$Total_Delivery_Time),
+  Standard_Deviation = sd(food_clean$Total_Delivery_Time)
+)
+
+total_delivery_stats
+
+```
+
+```{r total-delivery-graph, fig.width=9, fig.height=6}
+
+ggplot(
+  food_clean,
+  aes(x = Total_Delivery_Time)
+) +
+  geom_histogram(bins = 20) +
+  labs(
+    title = "Distribution of Total Delivery Time",
+    x = "Total Delivery Time (Minutes)",
+    y = "Number of Orders"
+  ) +
+  theme_minimal()
+
+```
+
+## Interpretation
+
+The graph shows the distribution of total time required to prepare and
+deliver orders. This is useful for understanding overall delivery efficiency.
+
+# 22. Overall Project Summary
+
+```{r overall-summary}
+
+overall_summary <- data.frame(
+  Total_Orders = nrow(food_clean),
+  Unique_Customers = length(unique(food_clean$Customer_ID)),
+  Unique_Restaurants = length(unique(food_clean$Restaurant_Name)),
+  Unique_Cuisines = length(unique(food_clean$Cuisine_Type)),
+  Average_Food_Cost = mean(food_clean$Food_Cost),
+  Average_Delivery_Fee = mean(food_clean$Delivery_Fee),
+  Average_Order_Cost = mean(food_clean$Total_Order_Cost),
+  Average_Delivery_Time = mean(food_clean$Delivery_Time_Min),
+  Average_Rating = mean(food_clean$Order_Rating)
+)
+
+overall_summary
+
+```
+
+# 23. Findings
+
+Based on the statistical analysis and visualizations, the following findings
+were identified:
+
+- The dataset contains detailed information about food delivery orders.
+- Food costs and total order costs vary across different orders.
+- Different cuisine types have different levels of popularity.
+- Restaurant order counts vary, indicating differences in customer demand.
+- Delivery times vary among orders.
+- Food preparation time contributes to the overall delivery process.
+- Customer ratings provide an indication of customer satisfaction.
+- The relationship between delivery time and customer rating can be examined
+  using correlation and scatter-plot analysis.
+- Food cost has an important relationship with total order cost.
+- The analysis demonstrates how statistical methods and visualization can be
+  used to understand food delivery operations and customer behavior.
+
+# 24. Business Recommendations
+
+Based on the analysis, the following recommendations can be considered:
+
+- Restaurants should monitor preparation times to improve delivery efficiency.
+- Delivery services should identify orders with unusually long delivery times.
+- Restaurants can study popular cuisine categories to understand customer
+  demand.
+- Customer ratings can be used to identify areas requiring service
+  improvement.
+- Restaurants can analyze average order values to understand customer
+  spending behavior.
+- Delivery charges should be monitored to maintain a balance between
+  customer satisfaction and operational costs.
+
+# 25. Conclusion
+
+This project analyzed food delivery order data using R.
+
+The analysis included data importing, preprocessing, data cleaning,
+descriptive statistics, order analysis, cuisine analysis, restaurant
+analysis, cost analysis, delivery-time analysis, customer rating analysis,
+customer analysis and correlation analysis.
+
+Various graphs were created to visualize important patterns and relationships
+within the dataset. Statistical measures were used to summarize the data and
+support the interpretation of results.
+
+Overall, the project demonstrates how R can be used for practical data
+analysis and visualization in the food delivery industry. The results can
+help understand customer behavior, restaurant demand, order costs and
+delivery performance.
+
+# 26. Explanation of R Functions Used
+
+| R Function | Purpose |
+|---|---|
+| `read.csv()` | Imports CSV data |
+| `head()` | Displays first records |
+| `nrow()` | Counts rows |
+| `ncol()` | Counts columns |
+| `names()` | Displays column names |
+| `str()` | Shows dataset structure |
+| `summary()` | Provides summary statistics |
+| `is.na()` | Identifies missing values |
+| `duplicated()` | Identifies duplicate records |
+| `unique()` | Finds unique values |
+| `table()` | Creates frequency tables |
+| `mean()` | Calculates average |
+| `median()` | Calculates median |
+| `min()` | Finds minimum |
+| `max()` | Finds maximum |
+| `sd()` | Calculates standard deviation |
+| `aggregate()` | Calculates grouped statistics |
+| `cor()` | Calculates correlation |
+| `ggplot()` | Creates visualizations |
+| `geom_col()` | Creates bar charts |
+| `geom_histogram()` | Creates histograms |
+| `geom_point()` | Creates scatter plots |
+| `geom_smooth()` | Adds a trend line |
+| `theme_minimal()` | Applies a clean graph theme |
+
+# 27. References
+
+1. R Core Team. R: A Language and Environment for Statistical Computing.
+2. Posit. RStudio IDE Documentation.
+3. Food Delivery Orders dataset used for this project.
